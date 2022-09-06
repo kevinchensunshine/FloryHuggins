@@ -1,0 +1,14 @@
+# This folder is for Polymer phase separation, Flory-Huggins theory
+
+To Do:
+1. Develop solid understanding of FH theory (Rubinstein & Colby, Polymer Physics, Chapter 4), maybe even write a small summary
+2. Review code in python to see solvers needed (FloryHuggins.ipynb)
+3. Develop a sense for needed components/layout/infrastructure
+4. Review examples of online apps to refine 3.
+    (https://physics.weber.edu/schroeder/software/
+    http://falstad.com/mathphysics.html
+    http://statt.web.illinois.edu/percolation/main.html
+    https://statt.web.illinois.edu/FloryHuggins/FloryHuggins.html))
+    Use "inspect" or "view page source" in your browser to see code.
+5. Implement!
+6. Test laptop/different browsers, phone, tablet etc.
