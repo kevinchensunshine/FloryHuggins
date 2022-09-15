@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="stylesheet" href="pyscript.css" />
+        <script defer src="pyscript.js"></script>
+        <py-config>
+            - autoclose_loader: true
+            - runtimes:
+              -
+                src: "pyodide\pyodide.js"
+                name: pyodide-0.20
+                lang: python
+        </py-config>
+    </head>
+    <body>
+        <div class="slidecontainer">
+            <p>NA</p>
+            <input type="range" onchange="updateNaValue()" min="10" max="1000" value="10" class="slider" id="sliderA" oninput="this.nextElementSibling.value = this.value">
+            <output>10</output>
+            <p>NB</p>
+            <input type="range" onchange="updateNbValue()" min="10" max="1000" value="10" class="slider" id="sliderB" oninput="this.nextElementSibling.value = this.value">
+            <output>10</output>
+            <p>chi</p>
+            <input type="range" onchange="updateChiValue()" min="0" max="1" value="0" class="slider" id="sliderchi" step = "0.0001" oninput="this.nextElementSibling.value = this.value">
+            <output>0</output>
+        </div>
+        <script type="text/javascript" src="FloryHuggins.js"></script>
+        <py-env>
+        </py-env>
+        <py-script src="main.py"></py-script>
+    </body>
+</html>
