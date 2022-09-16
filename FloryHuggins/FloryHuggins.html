@@ -1,18 +1,25 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <link rel="stylesheet" href="pyscript.css" />
-        <script defer src="pyscript.js"></script>
+        <link rel="stylesheet" href="pyscript/pyscript.css" />
+        <script defer src="pyscript/pyscript.js"></script>
         <py-config>
             - autoclose_loader: true
             - runtimes:
               -
-                src: "pyodide\pyodide.js"
-                name: pyodide-0.20
+                src: "pyodide/pyodide.js"
+                name: pyodide-0.21
                 lang: python
         </py-config>
     </head>
     <body>
+        <py-env>
+            - numpy
+            - matplotlib
+            - sympy
+            - paths:
+                - main.py
+        </py-env>
         <div class="slidecontainer">
             <p>NA</p>
             <input type="range" onchange="updateNaValue()" min="10" max="1000" value="10" class="slider" id="sliderA" oninput="this.nextElementSibling.value = this.value">
@@ -27,6 +34,9 @@
         <script type="text/javascript" src="FloryHuggins.js"></script>
         <py-env>
         </py-env>
-        <py-script src="main.py"></py-script>
+        <py-script>
+            import js
+            print(document.getElementById("sliderA").value)
+        </py-script>
     </body>
 </html>
