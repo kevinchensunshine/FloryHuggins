@@ -1,0 +1,47 @@
+<html>
+    <head>
+        <title> Sine Curve </title>
+        <script> "application/javascript" 
+            var k = 5;
+            function handle_input() {
+                var slider = document.getElementById("k");
+                k = slider.value;
+                draw();
+            }
+
+            function draw() {
+                const canvas = document.getElementById('tutorial');
+                if (canvas.getContext) {
+                    const ctx = canvas.getContext('2d');
+                    var origin_x = 10;
+                    var origin_y = 75;
+                    var scale_x = 280/2/Math.PI;
+                    var scale_y = 130/2;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.beginPath();
+                    ctx.moveTo(origin_x, origin_y);
+                    for (let i = 1; i <= 100; i++) {
+                        let angle = i / 50 * Math.PI;
+                        let sine_value = k / 5 * Math.sin(angle);
+                        ctx.lineTo(origin_x + angle * scale_x, origin_y - sine_value * scale_y);
+                    }
+                    ctx.stroke();
+                }
+            }
+        </script>
+        <style>
+            canvas {border: 1px solid brown;}
+        </style>
+    </head>
+    <body onload = "draw();">
+        <h1>ksin((2pi)x)</h1>
+        <div>
+            <input type = "range" id = "k" name = "Boltzmann"
+                    min = "1" max = "10" oninput="handle_input()">
+            <label for="k">k</label>
+        <canvas
+            id = "tutorial" width = "300" height = "150">
+        </canvas>
+    </body>
+
+</html>
