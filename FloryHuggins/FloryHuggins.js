@@ -1,19 +1,34 @@
+
 var NA = 100;
 var NB = 100;
 var chi = 0.02;
+var tangent = [NaN, NaN, NaN, NaN]
+var spinodal = [NaN, NaN, NaN, NaN]
+
+function createObject(object, variableName){
+  //Bind a variable whose name is the string variableName
+  // to the object called 'object'
+  let execString = variableName + " = object"
+  console.log("Running `" + execString + "`");
+  eval(execString)
+}
 
 function handle_na() {
     const slider = document.getElementById("NA");
     NA = slider.value;
     document.getElementById("value_of_NA").innerHTML = NA.toString();
-    draw();
+    update_tangent_and_spinodal()
+    draw()
+    draw_flory_huggins(NA, NB, chi, "tangent_and_binodal", tangent, spinodal)
 }
 
 function handle_nb() {
     const slider = document.getElementById("NB");
     NB = slider.value;
     document.getElementById("value_of_NB").innerHTML = NB.toString();
-    draw();
+    update_tangent_and_spinodal()
+    draw()
+    draw_flory_huggins(NA, NB, chi, "tangent_and_binodal", tangent, spinodal)
 }
 
 // Update the current slider value (each time you drag the slider handle)
@@ -21,11 +36,18 @@ function handle_chi() {
     const slider = document.getElementById("chi");
     chi = slider.value;
     document.getElementById("value_of_chi").innerHTML = chi.toString();
-    draw();
+    update_tangent_and_spinodal()
+    draw()
+    draw_flory_huggins(NA, NB, chi, "tangent_and_binodal", tangent, spinodal)
+}
+
+async function update_tangent_and_spinodal() {
+  tangent = pyodideGlobals.get('tangent').toJs()
+  spinodal = pyodideGlobals.get('spinodal').toJs()
 }
 
 function draw() {
-    draw_flory_huggins(NA, NB, chi, "floryhuggins", [NaN, NaN, NaN, NaN], [NaN, NaN, NaN, NaN]);
+    draw_flory_huggins(NA, NB, chi, "floryhuggins", tangent, spinodal);
 }
 
 function F_mix(phi,NA,NB,chi,kT) {
@@ -176,4 +198,29 @@ function draw_flory_huggins(na, nb, c, canvas_id, tangent, binodal) {
         draw_green_dot(offset_x + binodal[1] * scale_x, offset_y - binodal[3] * scale_y, ctx);
       }
     }
+}
+
+function draw_green_dot(x, y, context)
+{
+  console.log(x, y)
+  const save = context.fillStyle;
+
+  context.beginPath();
+  context.arc(x, y, 3, 0, 2 * Math.PI);
+  context.fillStyle = "green";
+  context.fill();
+  context.fillStyle = save;
+}
+
+function draw_red_line(x1, y1, x2, y2, context)
+{
+  context.beginPath();
+  context.moveTo(x1, y1);
+  context.lineTo(x2, y2);
+  context.setLineDash([10, 5]);
+  const save = context.strokeStyle;
+  context.strokeStyle = "red";
+  context.stroke();
+  context.setLineDash([]);
+  context.strokeStyle = save;
 }
