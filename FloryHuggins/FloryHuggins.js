@@ -2,52 +2,52 @@
 var NA = 100;
 var NB = 100;
 var chi = 0.02;
-var tangent = [NaN, NaN, NaN, NaN]
-var spinodal = [NaN, NaN, NaN, NaN]
+//var tangent = [NaN, NaN, NaN, NaN]
+//var spinodal = [NaN, NaN, NaN, NaN]
 
 function createObject(object, variableName){
   //Bind a variable whose name is the string variableName
   // to the object called 'object'
   let execString = variableName + " = object"
-  console.log("Running `" + execString + "`");
+  //console.log("Running `" + execString + "`");
   eval(execString)
 }
 
 function handle_na() {
     const slider = document.getElementById("NA");
-    NA = slider.value;
+    NA = parseFloat(slider.value);
     document.getElementById("value_of_NA").innerHTML = NA.toString();
-    update_tangent_and_spinodal()
     draw()
-    draw_flory_huggins(NA, NB, chi, "tangent_and_binodal", tangent, spinodal)
+    update_tangent_and_spinodal()
 }
 
 function handle_nb() {
     const slider = document.getElementById("NB");
-    NB = slider.value;
+    NB = parseFloat(slider.value);
     document.getElementById("value_of_NB").innerHTML = NB.toString();
-    update_tangent_and_spinodal()
     draw()
-    draw_flory_huggins(NA, NB, chi, "tangent_and_binodal", tangent, spinodal)
+    update_tangent_and_spinodal()
 }
 
 // Update the current slider value (each time you drag the slider handle)
 function handle_chi() {
     const slider = document.getElementById("chi");
-    chi = slider.value;
+    chi = parseFloat(slider.value);
     document.getElementById("value_of_chi").innerHTML = chi.toString();
-    update_tangent_and_spinodal()
     draw()
-    draw_flory_huggins(NA, NB, chi, "tangent_and_binodal", tangent, spinodal)
+    update_tangent_and_spinodal()
 }
 
 async function update_tangent_and_spinodal() {
   tangent = pyodideGlobals.get('tangent').toJs()
   spinodal = pyodideGlobals.get('spinodal').toJs()
+  draw_flory_huggins(NA, NB, chi, "tangent_and_binodal", tangent, spinodal)
+  console.log("tangent", tangent)
+  console.log("spinodal", spinodal)
 }
 
 function draw() {
-    draw_flory_huggins(NA, NB, chi, "floryhuggins", tangent, spinodal);
+    draw_flory_huggins(NA, NB, chi, "floryhuggins", [NaN, NaN, NaN, NaN], [NaN, NaN, NaN, NaN]);
 }
 
 function F_mix(phi,NA,NB,chi,kT) {
@@ -202,7 +202,6 @@ function draw_flory_huggins(na, nb, c, canvas_id, tangent, binodal) {
 
 function draw_green_dot(x, y, context)
 {
-  console.log(x, y)
   const save = context.fillStyle;
 
   context.beginPath();
