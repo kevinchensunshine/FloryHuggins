@@ -40,7 +40,34 @@
         <p></p>
         <canvas id="floryhuggins" width="400" height="200"></canvas>
         <p id="values"></p>
+        <div>
+            <label for="NA2">NA</label>
+            <input type="range" id="NA2" name="NA" min="1" max="300" step="1" value="100" oninput="handle_na_plot2()"></input>
+            <output for="NA2" id="value_of_NA2">100</output>
+        </div>
+        <div>
+            <label for="NB2">NB</label>
+            <input type="range" id="NB2" name="NB" value="100" min="1" max="300" step="1" oninput="handle_nb_plot2()"></input>
+            <output for="NB2" id="value_of_NB2">100</output>
+        </div>
+        <div>
+            <label for="chi2">chi</label>
+            <input type="range" id="chi2" name="chi" value="0.02" min="-0.1" max="0.5" step="0.001" oninput="handle_chi_plot2()"></input>
+            <output for="chi2" id="value_of_chi2">0.02</output>
+        </div>
         <canvas id="tangent_and_binodal" width="400" height="200"></canvas>
+        <h1>Flory Huggins with Tangent and Binodal</h1>
+        <div id="controls_for_tangent_and_binodal">
+            <label for="NA2">NA</label>
+            <input type="number" id="NA2" name="NA2" value="20" min="1" max="300" oninput="handle_na2()"></input>
+            <label for="NB2">NB</label>
+            <input type="number" id="NB2" name="NB2" value="10" min="1" max="300" oninput="handle_nb2()"></input>
+            <label for="chi2">chi</label>
+            <input type="number" id="chi2" name="chi2" value="0.25" min="-0.1" max="0.5" oninput="handle_chi2()"></input>
+            <button id="refresh_button" type="button" onclick="refresh_button_clicked()">Refresh</button>
+          </div>
+          <canvas id="tangent_and_binodal" width="400" height="200"></canvas>
+        <p id="values"></p>
         <py-script src="main.py"></py-script>
     </body>
 </html>
