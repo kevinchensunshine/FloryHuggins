@@ -1,66 +1,82 @@
-#nbi:hide_in
-import numpy as np
-#import ipywidgets as ipw
-import matplotlib
-import matplotlib.pyplot as plt
-import sympy
-from sympy import Symbol, nsolve, log, lambdify
+from js import document
+from pyodide import ffi
+from sympy import solvers
+#from sympy.solvers import nsolve
+from sympy import Symbol, log
+from js import createObject
 
-#import warnings
-#warnings.filterwarnings("ignore")
+x1 = Symbol('x1')
+x2 = Symbol('x2')
+y1 = Symbol('y1')
+y2 = Symbol('y2')
+global NA, NB, Chi, kT
+NA = float(document.getElementById("NA").value)
+NB = float(document.getElementById("NB").value)
+Chi = float(document.getElementById("chi").value)
+kT = 1.0
+Log = document.getElementById('values')
 
-def F_mix(phi,NA,NB,chi,kT):
-    return kT*(chi*phi*(1.-phi) + phi/NA*np.log(phi) + (1.-phi)/NB*np.log(1-phi))
+def change_NA_value(event):
+    global NA, tangent, spinodal, kT
+    NA = float(event.target.value)
+    tangent, spinodal = solve_binodal_and_spinodal(Chi, NA, NB, kT)
 
-def F_mix_s(phi,NA,NB,chi,kT):
-    return kT*(chi*phi*(1.-phi) + phi/NA*log(phi) + (1.-phi)/NB*log(1-phi))
+def change_NB_value(event):
+    global NB, tangent, spinodal, kT
+    NB = float(event.target.value)
+    tangent, spinodal = solve_binodal_and_spinodal(Chi, NA, NB, kT)
 
-def d_F_mix_s(phi,NA,NB,chi,kT):
+def change_Chi_value(event):
+    global Chi, tangent, spinodal, kT
+    Chi = float(event.target.value)
+    tangent, spinodal = solve_binodal_and_spinodal(Chi, NA, NB, kT)
+
+def d_d_f_mix_s(phi,NA,NB,chi,kT):
+    return -2*chi + 1./(NA*phi) + 1./(NB - NB*phi)
+
+def d_f_mix_s(phi,NA,NB,chi,kT):
     return kT*(chi*(1.-2*phi) + 1/NA*log(phi)+ 1/NA -1/NB -1/NB*log(1-phi))
 
-def solve_tangent(NA,NB,chi,kT):
-    x1 = Symbol('x1')
-    x2 = Symbol('x2')
-    y1 = Symbol('y1')
-    y2 = Symbol('y2')
-    
+def f_mix_s(phi,NA,NB,chi,kT):
+    return kT*(chi*phi*(1.-phi) + phi/NA*log(phi) + (1.-phi)/NB*log(1-phi))
+
+def solve_binodal_and_spinodal(chi, NA, NB, kT):
     try:
-        x1in = -(NA - NB - 2*NA*NB*chi + np.sqrt(-8*NA*NB**2*chi + (-NA + NB + 2*NA*NB*chi)**2))/(4*NA*NB*chi)
-        x2in = (-NA + NB + 2*NA*NB*chi + np.sqrt(-8*NA*NB**2*chi + (-NA + NB + 2*NA*NB*chi)**2))/(4*NA*NB*chi)
-        x1in = np.max([(x1in)/2.,0.01])
-        x2in = np.min([(x2in+1)/2.,0.999])
-        y1in = F_mix_s(x1in,NA,NB,chi,kT)
-        y2in = F_mix_s(x2in,NA,NB,chi,kT)
-    except:
-        x1in=0.1
-        x2in=0.99
-        y1in=-0.1
-        y2in=-0.1
-        
-    try:   
-        sol = nsolve((
-        y1-F_mix_s(x1,NA,NB,chi,kT),
-        y2-F_mix_s(x2,NA,NB,chi,kT), 
-        d_F_mix_s(x1,NA,NB,chi,kT)-d_F_mix_s(x2,NA,NB,chi,kT),
-        d_F_mix_s(x1,NA,NB,chi,kT)-(y2-y1)/(x2-x1)),
-        (x1,x2,y1,y2),(x1in,x2in,y1in,y2in))
-    except: 
-        sol=[np.nan,np.nan,np.nan,np.nan]
-    return sol 
+      sol = solvers.nsolve((
+      y1-f_mix_s(x1,NA,NB,chi,kT),
+      y2-f_mix_s(x2,NA,NB,chi,kT),
+      d_f_mix_s(x1,NA,NB,chi,kT)-d_f_mix_s(x2,NA,NB,chi,kT),
+      d_f_mix_s(x1,NA,NB,chi,kT)-(y2-y1)/(x2-x1)),
+      (x1,x2,y1,y2),(0.01,0.99,-0.01,-0.01))
+      tangent=[float(sol[0]),float(sol[1]),float(sol[2]),float(sol[3])]
+    except Exception:
+      tangent=[float("nan"),float("nan"),float("nan"),float("nan")]
 
-def solve_spinodal(NA,NB,chi,kT):
     try:
-        x1 = -(NA - NB - 2*NA*NB*chi + np.sqrt(-8*NA*NB**2*chi + (-NA + NB + 2*NA*NB*chi)**2))/(4*NA*NB*chi)
-        x2 = (-NA + NB + 2*NA*NB*chi + np.sqrt(-8*NA*NB**2*chi + (-NA + NB + 2*NA*NB*chi)**2))/(4*NA*NB*chi)
-        y1 = F_mix_s(x1,NA,NB,chi,kT)
-        y2 = F_mix_s(x2,NA,NB,chi,kT)
-        sol = [x1,x2,y1,y2]
+      sol = solvers.nsolve((
+      d_d_f_mix_s(x1,NA,NB,chi,kT),
+      d_d_f_mix_s(x2,NA,NB,chi,kT),
+      y1-f_mix_s(x1,NA,NB,chi,kT),
+      y2-f_mix_s(x2,NA,NB,chi,kT)),
+      (x1,x2,y1,y2),(1./4.,3./4.,-0.002,-0.002))
+      spinodal=[float(sol[0]),float(sol[1]),float(sol[2]),float(sol[3])]
     except:
-        sol=[np.nan,np.nan,np.nan,np.nan]
-    return sol 
+      spinodal=[float("nan"),float("nan"),float("nan"),float("nan")]
+    return tangent, spinodal
 
-def line(x,x1,x2,y1,y2):
-    m = (y1-y2)/(x1-x2)
-    return  m*(x-x1)+y1
+global tangent, spinodal 
+tangent, spinodal = solve_binodal_and_spinodal(Chi, NA, NB, kT)
 
-#nbi:hide_in
+def main():
+  na = document.getElementById("NA")
+  nb = document.getElementById("NB")
+  chi = document.getElementById("chi")
+  proxy = ffi.create_once_callable(change_NA_value)
+  na.addEventListener('input', proxy)
+  proxy = ffi.create_once_callable(change_NB_value)
+  nb.addEventListener("input", proxy)
+  proxy = ffi.create_once_callable(change_Chi_value)
+  chi.addEventListener("input", proxy)
+  global_proxy = ffi.create_proxy(globals())
+  createObject(global_proxy, "pyodideGlobals")
+main()
