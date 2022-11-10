@@ -13,6 +13,7 @@ global NA, NB, Chi, kT
 NA = float(document.getElementById("NA").value)
 NB = float(document.getElementById("NB").value)
 Chi = float(document.getElementById("chi").value)
+
 kT = 1.0
 Log = document.getElementById('values')
 

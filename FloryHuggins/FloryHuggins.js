@@ -2,8 +2,11 @@
 var NA = 100;
 var NB = 100;
 var chi = 0.02;
-//var tangent = [NaN, NaN, NaN, NaN]
-//var spinodal = [NaN, NaN, NaN, NaN]
+var NA2 = 100;
+var NB2 = 100;
+var chi2 = 0.02;
+var tangent = [NaN, NaN, NaN, NaN]
+var spinodal = [NaN, NaN, NaN, NaN]
 
 function createObject(object, variableName){
   //Bind a variable whose name is the string variableName
@@ -18,7 +21,6 @@ function handle_na() {
     NA = parseFloat(slider.value);
     document.getElementById("value_of_NA").innerHTML = NA.toString();
     draw()
-    update_tangent_and_spinodal()
 }
 
 function handle_nb() {
@@ -26,7 +28,6 @@ function handle_nb() {
     NB = parseFloat(slider.value);
     document.getElementById("value_of_NB").innerHTML = NB.toString();
     draw()
-    update_tangent_and_spinodal()
 }
 
 // Update the current slider value (each time you drag the slider handle)
@@ -35,15 +36,51 @@ function handle_chi() {
     chi = parseFloat(slider.value);
     document.getElementById("value_of_chi").innerHTML = chi.toString();
     draw()
-    update_tangent_and_spinodal()
 }
+
+function handle_na2() {
+  const slider = document.getElementById("NA2");
+  NA2 = slider.value;
+}
+
+function handle_nb2() {
+  const slider = document.getElementById("NB2");
+  NB2 = slider.value;
+}
+
+// Update the current slider value (each time you drag the slider handle)
+function handle_chi2() {
+  const slider = document.getElementById("chi2");
+  chi2 = slider.value;
+}
+
+/*function handle_na_plot2() {
+  const slider = document.getElementById("NA2");
+  NA2 = parseFloat(slider.value);
+  document.getElementById("value_of_NA2").innerHTML = NA2.toString();
+  update_tangent_and_spinodal()
+}
+
+function handle_nb_plot2() {
+  const slider = document.getElementById("NB2");
+  NB2 = parseFloat(slider.value);
+  document.getElementById("value_of_NB2").innerHTML = NB2.toString();
+  update_tangent_and_spinodal()
+}
+
+// Update the current slider value (each time you drag the slider handle)
+function handle_chi_plot2() {
+  const slider = document.getElementById("chi2");
+  chi2 = parseFloat(slider.value);
+  document.getElementById("value_of_chi2").innerHTML = chi2.toString();
+  update_tangent_and_spinodal()
+}
+*/
 
 async function update_tangent_and_spinodal() {
   tangent = pyodideGlobals.get('tangent').toJs()
   spinodal = pyodideGlobals.get('spinodal').toJs()
-  draw_flory_huggins(NA, NB, chi, "tangent_and_binodal", tangent, spinodal)
-  console.log("tangent", tangent)
-  console.log("spinodal", spinodal)
+  draw_flory_huggins(NA2, NB2, chi2, "tangent_and_binodal", tangent, spinodal)
 }
 
 function draw() {
@@ -54,8 +91,15 @@ function F_mix(phi,NA,NB,chi,kT) {
     return kT*(chi*phi*(1.0-phi) + phi/NA*Math.log(phi) + (1.0-phi)/NB*Math.log(1.0-phi))
 }
 
+function refresh_button_clicked()
+  {
+    solve_and_draw_binodal(NA2, NB2, chi2, "tangent_and_binodal");
+  }
+
 function draw_flory_huggins(na, nb, c, canvas_id, tangent, binodal) {
+  
     const canvas = document.getElementById(canvas_id);
+    document.getElementById("refresh_button").disabled = true;
     if (canvas.getContext) {
       
       // pre-calculate fixed number of points on the curve so that we can estimate the
@@ -184,20 +228,77 @@ function draw_flory_huggins(na, nb, c, canvas_id, tangent, binodal) {
       ctx.strokeStyle = "blue";
       ctx.stroke();
 
-      // draw tangent line
-      if (!isNaN(tangent[0]))
-      {
-        draw_red_line(offset_x + tangent[0] * scale_x, offset_y - tangent[2] * scale_y,
-        offset_x + tangent[1] * scale_x, offset_y - tangent[3] * scale_y, ctx);
-      }
-
       // draw binodal points
       if (!isNaN(binodal[0]))
       {
         draw_green_dot(offset_x + binodal[0] * scale_x, offset_y - binodal[2] * scale_y, ctx);
         draw_green_dot(offset_x + binodal[1] * scale_x, offset_y - binodal[3] * scale_y, ctx);
       }
+
+      // draw tangent line
+      if (!isNaN(tangent[0]) || tangent[0] == "nan")
+      {
+        draw_red_line(offset_x + tangent[0] * scale_x, offset_y - tangent[2] * scale_y,
+        offset_x + tangent[1] * scale_x, offset_y - tangent[3] * scale_y, ctx);
+      }
+      document.getElementById("refresh_button").disabled = false;
     }
+}
+
+async function solve_and_draw_binodal(na, nb, c, canvas_id) {
+  console.log("na = " + na + " nb = " + nb + " chi = " + c);
+  document.getElementById("refresh_button").disabled = true;
+  let pyodide = await loadPyodide();
+  await pyodide.loadPackage("sympy");
+  pyodide.globals.set("NA", na);
+  pyodide.globals.set("NB", nb);
+  pyodide.globals.set("chi", c);
+  pyodide.globals.set("kT", 1.0);
+  pyodide.runPython(`
+    from sympy.solvers import nsolve
+    from sympy import Symbol, log
+    x1 = Symbol('x1')
+    x2 = Symbol('x2')
+    y1 = Symbol('y1')
+    y2 = Symbol('y2')
+
+    def d_d_F_mix_s(phi,NA,NB,chi,kT):
+      return -2*chi + 1./(NA*phi) + 1./(NB - NB*phi)
+
+    def d_F_mix_s(phi,NA,NB,chi,kT):
+      return kT*(chi*(1.-2*phi) + 1/NA*log(phi)+ 1/NA -1/NB -1/NB*log(1-phi))
+
+    def F_mix_s(phi,NA,NB,chi,kT):
+      return kT*(chi*phi*(1.-phi) + phi/NA*log(phi) + (1.-phi)/NB*log(1-phi))
+
+    try:
+      sol = nsolve((
+      y1-F_mix_s(x1,NA,NB,chi,kT),
+      y2-F_mix_s(x2,NA,NB,chi,kT),
+      d_F_mix_s(x1,NA,NB,chi,kT)-d_F_mix_s(x2,NA,NB,chi,kT),
+      d_F_mix_s(x1,NA,NB,chi,kT)-(y2-y1)/(x2-x1)),
+      (x1,x2,y1,y2),(0.01,0.99,-0.01,-0.01))
+      tangent=[float(sol[0]),float(sol[1]),float(sol[2]),float(sol[3])]
+    except:
+      tangent=[float("nan"),float("nan"),float("nan"),float("nan")]
+
+    try:
+      sol = nsolve((
+      d_d_F_mix_s(x1,NA,NB,chi,kT),
+      d_d_F_mix_s(x2,NA,NB,chi,kT),
+      y1-F_mix_s(x1,NA,NB,chi,kT),
+      y2-F_mix_s(x2,NA,NB,chi,kT)),
+      (x1,x2,y1,y2),(1./4.,3./4.,-0.01,-0.01))
+      binodal=[float(sol[0]),float(sol[1]),float(sol[2]),float(sol[3])]
+    except:
+      binodal=[float("nan"),float("nan"),float("nan"),float("nan")]
+    `);
+    tangent = pyodide.globals.get("tangent").toJs();
+    binodal = pyodide.globals.get("binodal").toJs();
+    console.log("tangent = " + tangent);
+    console.log("binodal = " + binodal);
+    draw_flory_huggins(na, nb, c, canvas_id, tangent, binodal);
+    document.getElementById("refresh_button").disabled = false;
 }
 
 function draw_green_dot(x, y, context)
