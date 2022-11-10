@@ -12,3 +12,4 @@ To Do:
     Use "inspect" or "view page source" in your browser to see code.
 5. Implement!
 6. Test laptop/different browsers, phone, tablet etc.
+7. HTML tool (consider word to html)
